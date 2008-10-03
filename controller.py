@@ -126,11 +126,12 @@ class ViewerController(GUIApp.GUIController):
         display = self.view.display
         hosts = item.report.hosts_with_pid(item.pid)
 
-        initial_output = item.name.strip() + "\n\n" + hosts[0].plugin_output(item.pid)
+        initial_output = hosts[0].plugin_output(item.pid)
         diffs = []
         for host in hosts[1:]:
             diff = difflib.unified_diff(initial_output.splitlines(), host.plugin_output(item.pid).splitlines())
             diffs.append((host, "\n".join(list(diff))))
+        initial_output = item.name.strip() + "\n\n" + initial_output
 
         identical_hosts = [hosts[0]]
         output = ""

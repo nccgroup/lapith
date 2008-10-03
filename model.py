@@ -51,7 +51,11 @@ class NessusReport(object):
         self.others.sort(lambda x, y: x.pid-y.pid)
 
         self.reportname = self._reportname()
-        self.info = [i for i in self.items if i.pid == 19506][0].output
+        info = [i for i in self.items if i.pid == 19506]
+        if info and info[0] is not None:
+            self.info = info[0].output
+        else:
+            self.info = "NO SCAN INFO"
         self.hosts = [NessusHost(h) for h in self._element.findall("ReportHost")]
         self.hosts.sort()
 
@@ -68,7 +72,7 @@ class NessusReport(object):
             policyComments = None
 
         if any((policyName, policyComments)):
-            self.policy = policyName + "\n\n" + policyComments
+            self.policy = str(policyName) + "\n\n" + str(policyComments)
         else:
             self.policy = None
     
