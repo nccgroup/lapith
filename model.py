@@ -92,6 +92,7 @@ class NessusHost():
         self._element = element
         self.items = [NessusItem(i) for i in element.findall("ReportItem")]
         self.address = element.find("HostName").text
+        self.dns_name = element.find("dns_name").text
 
     def plugin_output(self, pid):
         items = [i for i in self.items if i.pid == pid]
