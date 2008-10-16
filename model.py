@@ -92,7 +92,9 @@ class NessusHost():
         self._element = element
         self.items = [NessusItem(i) for i in element.findall("ReportItem")]
         self.address = element.find("HostName").text
-        self.dns_name = element.find("dns_name").text
+        self.dns_name = element.find("dns_name").text.replace("(unknown)", "unknown")
+        if self.dns_name[-1] == ".":
+            self.dns_name = self.dns_name[:-1]
 
     def plugin_output(self, pid):
         items = [i for i in self.items if i.pid == pid]
@@ -101,7 +103,9 @@ class NessusHost():
         return ""
 
     def __repr__(self):
-        return "%s (%s") % (self.address, self.dns_name)
+        if self.address != self.dns_name:
+            return "%s (%s)" % (self.address, self.dns_name)
+        return "%s" % self.address
 
     def __eq__(self, other):
         from socket import inet_aton
