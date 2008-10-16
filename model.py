@@ -101,7 +101,7 @@ class NessusHost():
         return ""
 
     def __repr__(self):
-        return self._element.find("HostName").text
+        return "%s (%s") % (self.address, self.dns_name)
 
     def __eq__(self, other):
         from socket import inet_aton
