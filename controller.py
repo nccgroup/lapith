@@ -136,10 +136,10 @@ class ViewerController(GUIApp.GUIController):
         output = ""
         for (host, diff) in diffs:
             if diff:
-                output += "=" * 70 + "\n\n%s\n%s\n\n" % (host.address, diff)
+                output += "=" * 70 + "\n\n%s\n%s\n\n" % (host, diff)
             else:
                 identical_hosts.append(host)
         if output:
             self.AddOutputPage(diff_title, output, font="Courier New")
-        output = ", ".join(i.address for i in identical_hosts) + "\n\n" + initial_output
+        output = ", ".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
         display.SetValue(output)
