@@ -112,21 +112,30 @@ class NessusHost():
         return "%s" % self.address
 
     def __eq__(self, other):
-        from socket import inet_aton
-        if inet_aton(self.address) == inet_aton(other.address):
-            return True
+        import socket
+        try:
+            if socket.inet_aton(self.address) == socket.inet_aton(other.address):
+                return True
+        except socket.error:
+            return self.address == other.address
         return False
 
     def __gt__(self, other):
-        from socket import inet_aton
-        if inet_aton(self.address) > inet_aton(other.address):
-            return True
+        import socket
+        try:
+            if socket.inet_aton(self.address) > socket.inet_aton(other.address):
+                return True
+        except socket.error:
+            return self.address > other.address
         return False
 
     def __lt__(self, other):
-        from socket import inet_aton
-        if inet_aton(self.address) < inet_aton(other.address):
-            return True
+        import socket
+        try:
+            if socket.inet_aton(self.address) < socket.inet_aton(other.address):
+                return True
+        except socket.error:
+            return self.address < other.address
         return False
 
 class NessusItem():
