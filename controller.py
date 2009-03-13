@@ -85,9 +85,10 @@ class ViewerController(GUIApp.GUIController):
     def create_scan_tree(self, file_, hosts):
         reports = file_.GetAllReports()
         scans_hook = self.tree_hooks["scans"]
+        file_hook = self.view.tree.AppendItem(scans_hook, file_.short_name, 0)
 
         for report in reports:
-            scan = self.view.tree.AppendItem(scans_hook, report.reportname, 0)
+            scan = self.view.tree.AppendItem(file_hook, report.reportname, 0)
             self.view.tree.SetPyData(scan, report)
 
             info = self.view.tree.AppendItem(scan, "Info", 0)

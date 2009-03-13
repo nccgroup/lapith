@@ -6,11 +6,13 @@
 # Released under AGPL. See LICENSE for more information
 
 from xml.etree import ElementTree as ET
+import os
 
 class NessusFile(object):
     def __init__(self, file_name):
         self._tree = ET.parse(file_name).getroot()
         self.name = file_name
+        self.short_name = file_name.split(os.sep)[-1]
 
     def GetAllReports(self):
         return [NessusReport(r) for r in self._tree.findall("Report")]
