@@ -16,7 +16,7 @@ class ViewerView(GUIApp.AUIView):
 #        iconFile = "search.ico"
 #        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
 #        self.SetIcon(icon1)
-        self.SetTitle("Kaudit")
+        self.SetTitle("Nessus Viewer")
                 
     def add_panes(self):
         self.add_tree_pane()
@@ -81,8 +81,8 @@ class ViewerView(GUIApp.AUIView):
 
     def set_statusbar(self):
         self.statusbar.SetStatusWidths([-2, -3])
-        self.statusbar.SetStatusText("Ready to audit!", 0)
-        self.statusbar.SetStatusText("Welcome To Kaudit!", 1)
+        self.statusbar.SetStatusText("Ready to view those nessus files!", 0)
+        self.statusbar.SetStatusText("Welcome To KnessusViewer!", 1)
 
     def set_size(self):
         self.SetSize((800, 500))

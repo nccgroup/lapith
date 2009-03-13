@@ -143,5 +143,5 @@ class ViewerController(GUIApp.GUIController):
                 identical_hosts.append(host)
         if output:
             self.AddOutputPage(diff_title, output, font="Courier New")
-        output = ", ".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
+        output = "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
         display.SetValue(output)
