@@ -61,17 +61,13 @@ class ViewerController(GUIApp.GUIController):
 
     def create_tree(self):
         self.view.tree.DeleteAllItems()
-        self.view.tree.AddRoot("Viewer")
+        self.view.tree.AddRoot("Scans")
 
         self.create_scan_trees()
         self.view.tree.Expand(self.view.tree.GetRootItem())
 
     def create_scan_trees(self):
-        if "scans" in self.tree_hooks:
-            self.view.tree.Delete(self.tree_hooks["scans"])
-        root = self.view.tree.GetRootItem()
-        scans = self.view.tree.AppendItem(root, "Scans", 0)
-        self.tree_hooks["scans"] = scans
+        scans = self.view.tree.GetRootItem()
 
         for file_ in self.files:
             self.create_scan_tree(file_, scans)
@@ -84,7 +80,7 @@ class ViewerController(GUIApp.GUIController):
         
     def create_scan_tree(self, file_, hosts):
         reports = file_.GetAllReports()
-        scans_hook = self.tree_hooks["scans"]
+        scans_hook = self.view.tree.GetRootItem()
         file_hook = self.view.tree.AppendItem(scans_hook, file_.short_name, 0)
 
         for report in reports:
