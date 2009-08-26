@@ -9,9 +9,11 @@ from CmdLineApp import GUIApp
 import wx
 import sys
 import inspect
-from model import NessusFile, NessusReport, NessusItem, NessusTreeItem
+from model import NessusFile, NessusReport, NessusItem, NessusTreeItem, MergedNessusReport
 
-from view import ID_Load_Files
+from view import ID_Load_Files, ID_Merge_Files
+
+ID_Save_Results = wx.NewId()
 
 def trim(docstring):
     if not docstring:
@@ -42,15 +44,36 @@ class ViewerInteractor(GUIApp.GUIInteractor):
     def bind_events(self):
         # Toolbar events
         self.view.Bind(wx.EVT_TOOL, self.LoadFiles, id=ID_Load_Files)
-        # Tree clicking
+        self.view.Bind(wx.EVT_TOOL, self.MergeFiles, id=ID_Merge_Files)
+        # Tree clicking and selections
         self.view.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged, self.view.tree)
+        self.view.tree.Bind(wx.EVT_TREE_ITEM_MENU, self.OnRightClick, self.view.tree)
         # Tab close event - will prevent closing the output tab
         self.view.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.OnPageClose)
         # Menu stuff
         self.view.Bind(wx.EVT_MENU, self.LoadFiles, id=wx.ID_OPEN)
+        self.view.Bind(wx.EVT_MENU, self.ExtractResults, id=ID_Save_Results)
+
+    def ExtractResults(self, event):
+        item = self.view.tree.GetSelection()
+        data = self.view.tree.GetItemData(item).GetData()
+        self.controller.tree_menu_click(data)
+
+    def OnRightClick(self, event):
+        item = event.GetItem()
+        self.view.tree.SelectItem(item)
+        data = self.view.tree.GetItemData(item).GetData()
+        if isinstance(data, NessusReport) or isinstance(data, MergedNessusReport) or isinstance(data, list):
+            menu = wx.Menu()
+            menu.Append(ID_Save_Results, "Save all results")
+            self.view.PopupMenu(menu)
+            menu.Destroy()
 
     def LoadFiles(self, event):
         self.controller.LoadFiles()
+
+    def MergeFiles(self, event):
+        self.controller.combine_files()
 
     def OnPageClose(self, event):
         idx = event.GetSelection()

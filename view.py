@@ -10,6 +10,7 @@ import wx
 
 ID_About = wx.NewId()
 ID_Load_Files = wx.NewId()
+ID_Merge_Files = wx.NewId()
 
 class ViewerView(GUIApp.AUIView):
     def set_icon(self):
@@ -58,6 +59,7 @@ class ViewerView(GUIApp.AUIView):
         bar.SetToolBitmapSize(wx.Size(16,16))
         bar_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16))
         bar.AddLabelTool(ID_Load_Files, "Open Files", bar_bmp1)
+        bar.AddLabelTool(ID_Merge_Files, "Merge Files", bar_bmp1)
 #        bar.EnableTool(101, True)
 #        bar.EnableTool(102, False)
         bar.Realize()

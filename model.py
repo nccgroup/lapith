@@ -8,6 +8,43 @@
 from xml.etree import ElementTree as ET
 import os
 
+class MergedNessusReport(object):
+    def __init__(self, files):
+        self._trees = [e._tree for e in files]
+        all_reports = []
+        for tree in self._trees:
+            all_reports.extend(NessusReport(r) for r in tree.findall("Report"))
+
+        self.highs = []
+        self.meds = []
+        self.lows = []
+        self.others = []
+
+        for report in all_reports:
+            self.highs.extend(report.highs)
+            self.meds.extend(report.meds)
+            self.lows.extend(report.lows)
+            self.others.extend(report.others)
+
+        self.hosts = []
+        for report in all_reports:
+            self.hosts.extend([NessusHost(h) for h in report._element.findall("ReportHost")])
+        self.hosts.sort()
+
+    def GetAllReports(self):
+        all_reports = []
+        for tree in self._trees:
+            all_reports.extend(NessusReport(r) for r in tree.findall("Report"))
+        return all_reports
+
+    def hosts_with_pid(self, pid):
+        ret = []
+        for h in self.hosts:
+            items = [i for i in h.items if i.pid == pid]
+            if items:
+                ret.append(h)
+        return ret
+
 class NessusFile(object):
     def __init__(self, file_name):
         self._tree = ET.parse(file_name).getroot()
