@@ -140,7 +140,7 @@ class ViewerController(GUIApp.GUIController):
             else:
                 identical_hosts.append(host)
         output = item.name+"\n"
-        output += "All hosts with this issue\n"
+        output += "%s hosts with this issue\n" % len(hosts)
         output += "\n".join(str(i) for i in hosts)
         output += "\n"+"-"*20+"\n"
         output += "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
