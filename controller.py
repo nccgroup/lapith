@@ -10,6 +10,7 @@ import wx
 import os
 from model import NessusFile, NessusTreeItem, MergedNessusReport, NessusReport
 import difflib
+from drop_target import MyFileDropTarget
 
 #Used to let us know what a test function looks like
 TEST_IDENT = "WP_AIX"
@@ -22,7 +23,18 @@ class ViewerController(GUIApp.GUIController):
         self.view.app.SetTopWindow(self.view)
         self.create_tree()
         self.view.Show()
+        drop_target = MyFileDropTarget(self.view.tree,
+                {
+                    "nessus": self.drop_action,
+                },
+                self.view.display.write
+                )
+        self.view.tree.SetDropTarget(drop_target)
         return True
+
+    def drop_action(self, file_):
+        self.files.append(NessusFile(file_))
+        self.create_scan_trees()
 
     def AddOutputPage(self, title, text, font="Courier New"):
         display = self.view.CreateTextCtrl(font=font)
@@ -67,6 +79,7 @@ class ViewerController(GUIApp.GUIController):
 
     def create_scan_trees(self):
         scans = self.view.tree.GetRootItem()
+        self.view.tree.DeleteChildren(scans)
 
         for file_ in self.files:
             self.create_scan_tree(file_, scans)
@@ -139,7 +152,7 @@ class ViewerController(GUIApp.GUIController):
                 identical_hosts.append(host)
         output = item.name+"\n"
         output += "%s hosts with this issue\n" % len(hosts)
-        output += "\n".join(str(i) for i in hosts)
+        output += "\n".join(str(i).split()[0] for i in hosts)
         output += "\n"+"-"*20+"\n"
         output += "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
         return output, diff_output
