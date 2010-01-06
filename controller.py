@@ -6,11 +6,9 @@
 # Released under AGPL. See LICENSE for more information
 
 from CmdLineApp import GUIApp
-from glob import glob
 import wx
 import os
 from model import NessusFile, NessusTreeItem, MergedNessusReport, NessusReport
-import inspect
 import difflib
 
 #Used to let us know what a test function looks like
@@ -208,4 +206,3 @@ class ViewerController(GUIApp.GUIController):
                     pass
                 elif isinstance(data, MergedNessusReport):
                     pass
-

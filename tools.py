@@ -6,7 +6,6 @@
 # Released under AGPL. See LICENSE for more information
 
 from xml.etree import ElementTree as ET
-import textwrap
 
 from CmdLineApp.CmdLineApp import CommandLineApp, OptionDef, BoolOpt
 

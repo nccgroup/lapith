@@ -8,8 +8,7 @@
 from CmdLineApp import GUIApp
 import wx
 import sys
-import inspect
-from model import NessusFile, NessusReport, NessusItem, NessusTreeItem, MergedNessusReport
+from model import NessusReport, NessusItem, NessusTreeItem, MergedNessusReport
 
 from view import ID_Load_Files, ID_Merge_Files
 

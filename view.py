@@ -88,4 +88,3 @@ class ViewerView(GUIApp.AUIView):
 
     def set_size(self):
         self.SetSize((800, 500))
-
