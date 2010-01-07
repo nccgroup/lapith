@@ -5,14 +5,30 @@
 #
 # Released under AGPL. See LICENSE for more information
 
-from CmdLineApp import GUIApp
 import wx
+import wx.aui
 
 ID_About = wx.NewId()
 ID_Load_Files = wx.NewId()
 ID_Merge_Files = wx.NewId()
 
-class ViewerView(GUIApp.AUIView):
+class ViewerView(wx.Frame):
+    def __init__(self):
+        wx.Frame.__init__(self, None)
+
+        self.set_icon()
+        self._mgr = wx.aui.AuiManager()
+        self._mgr.SetManagedWindow(self)
+        
+        self.add_menubar()
+        self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
+        self.set_statusbar()
+        self.set_size()
+        self.add_toolbars()
+        self.add_panes()
+        self.format_panes()
+        self._mgr.Update()
+
     def set_icon(self):
 #        iconFile = "search.ico"
 #        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
@@ -60,8 +76,6 @@ class ViewerView(GUIApp.AUIView):
         bar_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16))
         bar.AddLabelTool(ID_Load_Files, "Open Files", bar_bmp1)
         bar.AddLabelTool(ID_Merge_Files, "Merge Files", bar_bmp1)
-#        bar.EnableTool(101, True)
-#        bar.EnableTool(102, False)
         bar.Realize()
 
         self._mgr.AddPane(bar, wx.aui.AuiPaneInfo().

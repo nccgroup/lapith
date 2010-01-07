@@ -6,7 +6,8 @@
 # Released under AGPL. See LICENSE for more information
 
 if __name__ == '__main__':
+    import wx
     from controller import ViewerController
-    from view import ViewerView
-    from interactor import ViewerInteractor
-    app = ViewerController(ViewerView(), ViewerInteractor())
+    app = wx.App(0)
+    ViewerController()
+    app.MainLoop()

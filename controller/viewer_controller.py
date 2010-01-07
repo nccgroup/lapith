@@ -5,24 +5,35 @@
 #
 # Released under AGPL. See LICENSE for more information
 
-from CmdLineApp import GUIApp
 import wx
 import os
-from model import NessusFile, NessusTreeItem, MergedNessusReport, NessusReport
+from model.Nessus import NessusFile, NessusTreeItem, MergedNessusReport, NessusReport, NessusItem
 import difflib
 from drop_target import MyFileDropTarget
+from view import (
+        ViewerView,
+        SaveDialog,
+        ID_Load_Files,
+        ID_Merge_Files,
+        )
 
-#Used to let us know what a test function looks like
-TEST_IDENT = "WP_AIX"
+ID_Save_Results = wx.NewId()
 
-class ViewerController(GUIApp.GUIController):
-    def initView(self):
+class ViewerController:
+    def __init__(self):
+#    def initView(self):
+        self.view = ViewerView()
+
+        ## Instance vars
         self.files = []
         self.tests = []
         self.tree_hooks = {}
-        self.view.app.SetTopWindow(self.view)
+
+        ## Dialog paths
+        self._save_path = os.getcwd()
+        self._open_path = os.getcwd()
+
         self.create_tree()
-        self.view.Show()
         drop_target = MyFileDropTarget(self.view.tree,
                 {
                     "nessus": self.drop_action,
@@ -30,20 +41,23 @@ class ViewerController(GUIApp.GUIController):
                 self.view.display.write
                 )
         self.view.tree.SetDropTarget(drop_target)
-        return True
+
+        self.bind_events()
+        self.view.Layout()
+        self.view.Show()
 
     def drop_action(self, file_):
         self.files.append(NessusFile(file_))
         self.create_scan_trees()
 
-    def AddOutputPage(self, title, text, font="Courier New"):
+    def add_output_page(self, title, text, font="Courier New"):
         display = self.view.CreateTextCtrl(font=font)
         display.SetValue(text)
-        self.DeletePageWithTitle(title)
+        self.delete_page_with_title(title)
         self.view.notebook.AddPage(display, title)
         return self.view.notebook.GetPageIndex(display)
 
-    def LoadFiles(self):
+    def load_files(self, event):
         wildcard = "Nessus files (*.nessus)|*.nessus|"     \
                    "All files (*.*)|*.*"
 
@@ -58,12 +72,14 @@ class ViewerController(GUIApp.GUIController):
             # This returns a Python list of files that were selected.
             paths = dlg.GetPaths()
 
-            for path in paths:
-                self.files.append(NessusFile(path))
+            if paths:
+                for path in paths:
+                    self.files.append(NessusFile(path))
+                self._open_path = paths[0].rsplit(os.sep, 1)[0]
         dlg.Destroy()
         self.create_scan_trees()
 
-    def DeletePageWithTitle(self, title):
+    def delete_page_with_title(self, title):
         notebook = self.view.notebook
         page_count = notebook.GetPageCount()
         for i in xrange(page_count):
@@ -91,7 +107,7 @@ class ViewerController(GUIApp.GUIController):
         return list_
         
     def create_scan_tree(self, file_, hosts):
-        reports = file_.GetAllReports()
+        reports = file_.get_all_reports()
         scans_hook = self.view.tree.GetRootItem()
         file_hook = self.view.tree.AppendItem(scans_hook, file_.short_name, 0)
 
@@ -157,22 +173,22 @@ class ViewerController(GUIApp.GUIController):
         output += "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
         return output, diff_output
 
-    def ShowNessusItem(self, item):
+    def show_nessus_item(self, item):
         output, diff_output = self.get_item_output(item)
 
         diff_title = "Diffs"
-        self.DeletePageWithTitle(diff_title)
+        self.delete_page_with_title(diff_title)
 
         display = self.view.display
         if diff_output:
-            self.AddOutputPage(diff_title, diff_output, font="Courier New")
+            self.add_output_page(diff_title, diff_output, font="Courier New")
         display.SetValue(output)
 
-    def combine_files(self):
+    def combine_files(self, event):
         scans_hook = self.view.tree.GetRootItem()
         merged_scans = MergedNessusReport(self.files)
 
-        if merged_scans.GetAllReports():
+        if merged_scans.get_all_reports():
             merge_hook = self.view.tree.AppendItem(scans_hook, "Merged Files", 0)
 
             items_hook = self.view.tree.AppendItem(merge_hook, "Findings", 0)
@@ -204,8 +220,25 @@ class ViewerController(GUIApp.GUIController):
                 self.view.tree.SetPyData(item, other)
             self.view.tree.Expand(scans_hook)
 
-    def tree_menu_click(self, data):
-        saveas = self.view.SaveDialog(remember=True, message="Save results as...")
+    def bind_events(self):
+        # Toolbar events
+        self.view.Bind(wx.EVT_TOOL, self.load_files, id=ID_Load_Files)
+        self.view.Bind(wx.EVT_TOOL, self.combine_files, id=ID_Merge_Files)
+        # Tree clicking and selections
+        self.view.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed, self.view.tree)
+        self.view.tree.Bind(wx.EVT_TREE_ITEM_MENU, self.on_right_click, self.view.tree)
+        # Tab close event - will prevent closing the output tab
+        self.view.Bind(wx.aui.EVT_AUINOTEBOOK_PAGE_CLOSE, self.on_page_close)
+        # Menu stuff
+        self.view.Bind(wx.EVT_MENU, self.load_files, id=wx.ID_OPEN)
+        self.view.Bind(wx.EVT_MENU, self.extract_results, id=ID_Save_Results)
+        self.view.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
+
+    def extract_results(self, event):
+        item = self.view.tree.GetSelection()
+        data = self.view.tree.GetItemData(item).GetData()
+
+        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save results as...").get_choice()
         if saveas:
             with open(saveas, "w") as f:
                 output = ""
@@ -219,3 +252,44 @@ class ViewerController(GUIApp.GUIController):
                     pass
                 elif isinstance(data, MergedNessusReport):
                     pass
+
+    def on_right_click(self, event):
+        item = event.GetItem()
+        self.view.tree.SelectItem(item)
+        data = self.view.tree.GetItemData(item).GetData()
+        if isinstance(data, NessusReport) or isinstance(data, MergedNessusReport) or isinstance(data, list):
+            menu = wx.Menu()
+            menu.Append(ID_Save_Results, "Save all results")
+            self.view.PopupMenu(menu)
+            menu.Destroy()
+
+    def on_page_close(self, event):
+        idx = event.GetSelection()
+        tab = event.GetEventObject().GetPage(idx)
+        if tab == self.view.display:
+            event.Veto()
+
+    def on_sel_changed(self, event):
+        item = event.GetItem()
+        tree = self.view.tree
+        data = tree.GetItemData(item).GetData()
+        if isinstance(data, NessusReport):
+            self.view.display.Clear()
+            self.view.display.SetValue(data.reportname)
+            self.view.notebook.SetSelection(0)
+            self.view.tree.SetFocus()
+        elif isinstance(data, NessusItem):
+            self.view.display.Clear()
+            self.view.display.SetValue(data.output.replace('\\n', "\n"))
+            self.view.notebook.SetSelection(0)
+            self.view.tree.SetFocus()
+        elif isinstance(data, NessusTreeItem):
+            self.show_nessus_item(data)
+        elif isinstance(data, str):
+            self.view.display.Clear()
+            self.view.display.SetValue(data.replace('\\n', "\n"))
+            self.view.notebook.SetSelection(0)
+            self.view.tree.SetFocus()
+
+    def on_exit(self, event):
+        self.view.Close()

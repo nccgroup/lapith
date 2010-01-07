@@ -31,7 +31,7 @@ class MergedNessusReport(object):
             self.hosts.extend([NessusHost(h) for h in report._element.findall("ReportHost")])
         self.hosts.sort()
 
-    def GetAllReports(self):
+    def get_all_reports(self):
         all_reports = []
         for tree in self._trees:
             all_reports.extend(NessusReport(r) for r in tree.findall("Report"))
@@ -51,7 +51,7 @@ class NessusFile(object):
         self.name = file_name
         self.short_name = file_name.split(os.sep)[-1]
 
-    def GetAllReports(self):
+    def get_all_reports(self):
         return [NessusReport(r) for r in self._tree.findall("Report")]
 
 class NessusTreeItem(object):
