@@ -8,12 +8,19 @@
 from xml.etree import ElementTree as ET
 import os
 
+NESSUS_VERSIONS = {
+        "NessusClientData": "V1",
+        "NessusClientData_v2": "V2",
+        }
+
 class MergedNessusReport(object):
     def __init__(self, files):
         self._trees = [e._tree for e in files]
+        self._files = files
         all_reports = []
-        for tree in self._trees:
-            all_reports.extend(NessusReport(r) for r in tree.findall("Report"))
+        for file_ in self._files:
+            for report in file_._tree.findall("Report"):
+                all_reports.append(NessusReport(report, file_.version))
 
         self.highs = []
         self.meds = []
@@ -28,13 +35,14 @@ class MergedNessusReport(object):
 
         self.hosts = []
         for report in all_reports:
-            self.hosts.extend([NessusHost(h) for h in report._element.findall("ReportHost")])
+            self.hosts.extend([NessusHost(h, report.version) for h in report._element.findall("ReportHost")])
         self.hosts.sort()
 
     def get_all_reports(self):
         all_reports = []
-        for tree in self._trees:
-            all_reports.extend(NessusReport(r) for r in tree.findall("Report"))
+        for file_ in self._files:
+            for report in file_._tree.findall("Report"):
+                all_reports.append(NessusReport(report, file_.version))
         return all_reports
 
     def hosts_with_pid(self, pid):
@@ -48,11 +56,12 @@ class MergedNessusReport(object):
 class NessusFile(object):
     def __init__(self, file_name):
         self._tree = ET.parse(file_name).getroot()
+        self.version = NESSUS_VERSIONS[self._tree.tag]
         self.name = file_name
         self.short_name = file_name.split(os.sep)[-1]
 
     def get_all_reports(self):
-        return [NessusReport(r) for r in self._tree.findall("Report")]
+        return [NessusReport(r, self.version) for r in self._tree.findall("Report")]
 
 class NessusTreeItem(object):
     def __init__(self, report, item):
@@ -73,9 +82,10 @@ class NessusTreeItem(object):
         return self.name
 
 class NessusReport(object):
-    def __init__(self, element):
+    def __init__(self, element, version):
         self._element = element
-        self.items = [NessusItem(i) for i in self._element.findall("ReportHost/ReportItem")]
+        self.version = version
+        self.items = [NessusItem(i, self.version) for i in self._element.findall("ReportHost/ReportItem")]
 
         self.highs = [i for i in self.items if i.severity == 3]
         self.highs.sort(lambda x, y: x.pid-y.pid)
@@ -95,7 +105,7 @@ class NessusReport(object):
             self.info = info[0].output
         else:
             self.info = "NO SCAN INFO"
-        self.hosts = [NessusHost(h) for h in self._element.findall("ReportHost")]
+        self.hosts = [NessusHost(h, self.version) for h in self._element.findall("ReportHost")]
         self.hosts.sort()
 
         policyName = self._element.find("Policy/policyName")
@@ -116,11 +126,15 @@ class NessusReport(object):
             self.policy = None
     
     def _reportname(self):
-        name = self._element.find("ReportName")
-        if name is not None:
-            return name.text
-        else:
-            return self._element.find("ReportHost/HostName").text
+        if self.version == "V1":
+            name = self._element.find("ReportName")
+            if name is not None:
+                return name.text
+            else:
+                return self._element.find("ReportHost/HostName").text
+        elif self.version == "V2":
+            name = self._element.attrib["name"]
+            return name
 
     def hosts_with_pid(self, pid):
         ret = []
@@ -131,13 +145,33 @@ class NessusReport(object):
         return ret
 
 class NessusHost():
-    def __init__(self, element):
+    def __init__(self, element, version):
         self._element = element
-        self.items = [NessusItem(i) for i in element.findall("ReportItem")]
-        self.address = element.find("HostName").text
-        self.dns_name = element.find("dns_name").text.replace("(unknown)", "unknown")
-        if self.dns_name[-1] == ".":
-            self.dns_name = self.dns_name[:-1]
+        self.version = version
+        self.items = [NessusItem(i, self.version) for i in element.findall("ReportItem")]
+        if version == "V1":
+            self.address = element.find("HostName").text
+            try:
+                self.dns_name = element.find("dns_name").text.replace("(unknown)", "unknown")
+                if self.dns_name[-1] == ".":
+                    self.dns_name = self.dns_name[:-1]
+            except AttributeError:
+                self.dns_name = ""
+        elif self.version == "V2":
+            self.properties = element.findall("HostProperties/tag")
+            for tag in self.properties:
+                if tag.attrib["name"] == "host-ip":
+                    self.address = tag.text
+                    break
+            try:
+                for tag in self.properties:
+                    if tag.attrib["name"] == "host-fqdn":
+                        self.dns_name = tag.text
+                        if self.dns_name[-1] == ".":
+                            self.dns_name = self.dns_name[:-1]
+                        break
+            except AttributeError:
+                self.dns_name = ""
 
     def plugin_output(self, pid):
         items = [i for i in self.items if i.pid == pid]
@@ -178,15 +212,37 @@ class NessusHost():
         return False
 
 class NessusItem():
-    def __init__(self, element):
+    def __init__(self, element, version):
         self._element = element
-        self.pid = int(element.find("pluginID").text)
-        self.name = element.find("pluginName").text
-        self.output = element.find("data").text
-        self.severity = int(element.find("severity").text)
+        self.version = version
+        if self.version == "V1":
+            self.pid = int(element.find("pluginID").text)
+            try:
+                self.name = element.find("pluginName").text
+            except AttributeError:
+                self.name = "NO NAME"
+            try:
+                self.output = element.find("data").text
+            except AttributeError:
+                self.output = ""
+            self.severity = int(element.find("severity").text)
+        elif self.version == "V2":
+            self.pid = int(element.attrib["pluginID"])
+            try:
+                self.name = element.attrib["pluginName"]
+            except AttributeError:
+                self.name = "NO NAME"
+            try:
+                self.output = element.find("plugin_output").text
+            except AttributeError:
+                self.output = ""
+            self.severity = int(element.attrib["severity"])
 
     def __repr__(self):
         if self.pid == 0:
-            return "PORT: %s" % self._element.find("port").text
+            if self.version == "V1":
+                return "PORT: %s" % self._element.find("port").text
+            elif self.version == "V2":
+                return "PORT: %s" % self._element.attrib["port"]
         else:
             return '%s: %s' % (self.pid, self.name)
