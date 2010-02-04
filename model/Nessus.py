@@ -172,6 +172,9 @@ class NessusHost():
                         break
             except AttributeError:
                 self.dns_name = ""
+        if not hasattr(self, "address"):
+            self.address = element.attrib["name"]
+            self.dns_name = ""
 
     def plugin_output(self, pid):
         items = [i for i in self.items if i.pid == pid]
