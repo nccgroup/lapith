@@ -285,6 +285,7 @@ class ViewerController:
             self.view.tree.SetFocus()
         elif isinstance(data, NessusTreeItem):
             self.show_nessus_item(data)
+            self.view.tree.SetFocus()
         elif isinstance(data, str):
             self.view.display.Clear()
             self.view.display.SetValue(data.replace('\\n', "\n"))
