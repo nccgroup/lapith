@@ -71,6 +71,7 @@ class NessusTreeItem(object):
             self.name = str(item)
         else:
             self.name = "%s %s" % (self.pid, item.name)
+        self.item = item
 
     def __eq__(self, other):
         return self.pid == other.pid and self.name == other.name
@@ -236,7 +237,18 @@ class NessusItem():
             except AttributeError:
                 self.name = "NO NAME"
             try:
-                self.output = element.find("plugin_output").text
+                self.output = ""
+                for element_name in ("description", "plugin_output", "cvss_vector", "cvss_base_score"):
+                    output_element = element.find(element_name)
+                    if output_element is not None:
+                        self.output += element_name.replace("_", " ").title()+":\n"
+                        self.output += output_element.text+"\n\n"
+                for identifier in ("cve", "bid"):
+                    list_ = element.findall(identifier)
+                    if list_:
+                        for item in list_:
+                            self.output += identifier.upper()+": "
+                            self.output += item.text+"\n"
             except AttributeError:
                 self.output = ""
             self.severity = int(element.attrib["severity"])
