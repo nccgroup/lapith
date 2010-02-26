@@ -15,7 +15,11 @@ from view import (
         SaveDialog,
         ID_Load_Files,
         ID_Merge_Files,
+        ID_Generate_CSV,
+        ID_About,
         )
+from  wx.lib.wordwrap import wordwrap
+import csv
 
 ID_Save_Results = wx.NewId()
 
@@ -184,6 +188,27 @@ class ViewerController:
             self.add_output_page(diff_title, diff_output, font="Courier New")
         display.SetValue(output)
 
+    def generate_csv(self, event):
+        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save csv as...").get_choice()
+        if saveas:
+            merged_scans = MergedNessusReport(self.files)
+            if not saveas.endswith(".csv"):
+                saveas = saveas+".csv"
+            sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
+            serverity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
+            with open(saveas, "wb") as f:
+                csv_writer = csv.writer(f)
+                csv_writer.writerow(["PID","Severity","Hosts","Output","Diffs"])
+                for item in sorted_tree_items:
+                    csv_writer.writerow([
+                        item.pid,
+                        serverity[item.item.severity],
+                        "\n".join(x.address for x in merged_scans.hosts_with_pid(item.pid)),
+                        self.get_item_output(item)[0],
+                        self.get_item_output(item)[1],
+                        ]
+                        )
+
     def combine_files(self, event):
         scans_hook = self.view.tree.GetRootItem()
         merged_scans = MergedNessusReport(self.files)
@@ -224,6 +249,7 @@ class ViewerController:
         # Toolbar events
         self.view.Bind(wx.EVT_TOOL, self.load_files, id=ID_Load_Files)
         self.view.Bind(wx.EVT_TOOL, self.combine_files, id=ID_Merge_Files)
+        self.view.Bind(wx.EVT_TOOL, self.generate_csv, id=ID_Generate_CSV)
         # Tree clicking and selections
         self.view.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed, self.view.tree)
         self.view.tree.Bind(wx.EVT_TREE_ITEM_MENU, self.on_right_click, self.view.tree)
@@ -294,3 +320,18 @@ class ViewerController:
 
     def on_exit(self, event):
         self.view.Close()
+
+    def on_about(self, event):
+        ## Just display a dialog box
+        info = wx.AboutDialogInfo()
+        info.Name = "Nessus Results - The right way around"
+        info.Version = "1.0.0\n"
+        info.Copyright = "(C) 2010 Felix Ingram\n"
+        info.Description = wordwrap(
+                "Sometimes you need Nessus results on a per-issue basis, "
+                "sometimes you need to combine a load of reports into one."
+                "\n\nUncon only edition - keep it in the family people.",
+            350, wx.ClientDC(self.view))
+        info.Developers = [ "Felix Ingram",]
+        ## Then we call wx.AboutBox giving it that info object
+        wx.AboutBox(info)
