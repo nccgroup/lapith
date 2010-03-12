@@ -238,12 +238,15 @@ class NessusItem():
                 self.name = "NO NAME"
             try:
                 self.output = ""
+                for attrib in ("port", "svc_name", "protocol"):
+                    self.output += "%s: %s\n" % (attrib, element.attrib.get(attrib))
+                self.output += "\n"
                 for element_name in ("description", "plugin_output", "cvss_vector", "cvss_base_score"):
                     output_element = element.find(element_name)
                     if output_element is not None:
                         self.output += element_name.replace("_", " ").title()+":\n"
                         self.output += output_element.text+"\n\n"
-                for identifier in ("cve", "bid"):
+                for identifier in ("cve", "bid", "xref"):
                     list_ = element.findall(identifier)
                     if list_:
                         for item in list_:

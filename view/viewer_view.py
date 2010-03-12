@@ -100,7 +100,7 @@ class ViewerView(wx.Frame):
     def set_statusbar(self):
         self.statusbar.SetStatusWidths([-2, -3])
         self.statusbar.SetStatusText("Ready to view those nessus files!", 0)
-        self.statusbar.SetStatusText("Welcome To KnessusViewer!", 1)
+        self.statusbar.SetStatusText("Welcome To NessusViewer!", 1)
 
     def set_size(self):
         self.SetSize((800, 500))

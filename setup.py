@@ -49,7 +49,7 @@ class Py2exe(py2exe):
                     os.system('upx --best "%s"' % os.path.normpath(dll_name))
 
 
-version="0.1.0"
+version="1.0.1"
 
 py2exe_options = dict(
                     compressed=True,

@@ -325,7 +325,7 @@ class ViewerController:
         ## Just display a dialog box
         info = wx.AboutDialogInfo()
         info.Name = "Nessus Results - The right way around"
-        info.Version = "1.0.0\n"
+        info.Version = "1.0.1\n"
         info.Copyright = "(C) 2010 Felix Ingram\n"
         info.Description = wordwrap(
                 "Sometimes you need Nessus results on a per-issue basis, "
