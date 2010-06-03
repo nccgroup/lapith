@@ -59,6 +59,11 @@ class NessusFile(object):
         self.version = NESSUS_VERSIONS[self._tree.tag]
         self.name = file_name
         self.short_name = file_name.split(os.sep)[-1]
+        self.reports = [NessusReport(r, self.version) for r in self._tree.findall("Report")]
+        items = []
+        for r in self.reports:
+            items.extend(r.items)
+        self.unique_pids = set(i.pid for i in items)
 
     def get_all_reports(self):
         return [NessusReport(r, self.version) for r in self._tree.findall("Report")]
@@ -86,7 +91,11 @@ class NessusReport(object):
     def __init__(self, element, version):
         self._element = element
         self.version = version
-        self.items = [NessusItem(i, self.version) for i in self._element.findall("ReportHost/ReportItem")]
+        self.hosts = [NessusHost(h, self.version) for h in self._element.findall("ReportHost")]
+        self.hosts.sort()
+        self.items = []
+        for host in self.hosts:
+            self.items.extend(NessusItem(i, self.version, host=host) for i in host._element.findall("ReportItem"))
 
         self.highs = [i for i in self.items if i.severity == 3]
         self.highs.sort(lambda x, y: x.pid-y.pid)
@@ -106,8 +115,6 @@ class NessusReport(object):
             self.info = info[0].output
         else:
             self.info = "NO SCAN INFO"
-        self.hosts = [NessusHost(h, self.version) for h in self._element.findall("ReportHost")]
-        self.hosts.sort()
 
         policyName = self._element.find("Policy/policyName")
         if policyName is not None:
@@ -149,7 +156,7 @@ class NessusHost():
     def __init__(self, element, version):
         self._element = element
         self.version = version
-        self.items = [NessusItem(i, self.version) for i in element.findall("ReportItem")]
+        self.items = [NessusItem(i, self.version, host=self) for i in element.findall("ReportItem")]
         if version == "V1":
             self.address = element.find("HostName").text
             try:
@@ -216,9 +223,10 @@ class NessusHost():
         return False
 
 class NessusItem():
-    def __init__(self, element, version):
+    def __init__(self, element, version, host):
         self._element = element
         self.version = version
+        self.host = host
         if self.version == "V1":
             self.pid = int(element.find("pluginID").text)
             try:
@@ -231,30 +239,39 @@ class NessusItem():
                 self.output = ""
             self.severity = int(element.find("severity").text)
         elif self.version == "V2":
+            info_dict = {}
             self.pid = int(element.attrib["pluginID"])
+            info_dict["pid"] = self.pid
             try:
                 self.name = element.attrib["pluginName"]
             except AttributeError:
                 self.name = "NO NAME"
+            info_dict["name"] = self.name
             try:
                 self.output = ""
                 for attrib in ("port", "svc_name", "protocol"):
                     self.output += "%s: %s\n" % (attrib, element.attrib.get(attrib))
+                    info_dict[attrib] = element.attrib.get(attrib)
                 self.output += "\n"
                 for element_name in ("description", "plugin_output", "cvss_vector", "cvss_base_score"):
                     output_element = element.find(element_name)
                     if output_element is not None:
+                        info_dict[element_name] = output_element.text
                         self.output += element_name.replace("_", " ").title()+":\n"
                         self.output += output_element.text+"\n\n"
                 for identifier in ("cve", "bid", "xref"):
                     list_ = element.findall(identifier)
                     if list_:
+                        info_dict[identifier] = []
                         for item in list_:
+                            info_dict[identifier].append(identifier.upper())
                             self.output += identifier.upper()+": "
                             self.output += item.text+"\n"
             except AttributeError:
                 self.output = ""
             self.severity = int(element.attrib["severity"])
+            info_dict["severity"] = element.attrib["severity"]
+            self.info_dict = info_dict
 
     def __repr__(self):
         if self.pid == 0:
