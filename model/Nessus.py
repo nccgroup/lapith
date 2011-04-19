@@ -161,8 +161,10 @@ class NessusHost():
             self.address = element.find("HostName").text
             try:
                 self.dns_name = element.find("dns_name").text.replace("(unknown)", "unknown")
-                if self.dns_name[-1] == ".":
+                if self.dns_name and self.dns_name[-1] == ".":
                     self.dns_name = self.dns_name[:-1]
+                else:
+                    self.dns_name = ""
             except AttributeError:
                 self.dns_name = ""
         elif self.version == "V2":
@@ -175,8 +177,10 @@ class NessusHost():
                 for tag in self.properties:
                     if tag.attrib["name"] == "host-fqdn":
                         self.dns_name = tag.text
-                        if self.dns_name[-1] == ".":
+                        if self.dns_name and self.dns_name[-1] == ".":
                             self.dns_name = self.dns_name[:-1]
+                        else:
+                            self.dns_name = ""
                         break
             except AttributeError:
                 self.dns_name = ""
