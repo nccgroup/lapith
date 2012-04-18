@@ -16,10 +16,49 @@ from view import (
         ID_Load_Files,
         ID_Merge_Files,
         ID_Generate_CSV,
+        ID_Generate_VulnXML,
         ID_About,
         )
 from  wx.lib.wordwrap import wordwrap
 import csv
+
+from xml.sax.saxutils import escape
+from datetime import datetime
+XML_HEADER="""<?xml version="1.0"?>
+<Results Date="{timestamp}" Tool="Vuln::DB">
+"""
+XML_HOSTS_HEADER="""<Hosts>"""
+XML_HOST_HEADER="""<Host dnsname="{dnsname}" ipv6="" ipv4="{ipv4}">
+    <Vulns>"""
+XML_HOST_BODY="""<Vuln TestPhase="" id="{pid}"></Vuln>"""
+XML_HOST_FOOTER="""</Vulns></Host>"""
+XML_HOSTS_FOOTER="""</Hosts>"""
+XML_VULN_HEADER="""<Vulns>"""
+XML_VULN_BODY="""<Vuln group="" id="{i}">
+      <Title>{title}</Title>
+      <Description encoding="">
+      Hosts with issue
+      {hosts}
+
+      {issue}
+
+      ------------------------
+      {diffs}
+      </Description>
+      <Recommendation encoding=""></Recommendation>
+      <References/>
+      <Category/>
+      <Patches/>
+      <CVSS>
+        <OverallScore>{cvss_score}</OverallScore>
+        <Vector>{cvss_vector}</Vector>
+      </CVSS>
+      <Severity>{severity}</Severity></Vuln>"""
+XML_VULN_FOOTER="""</Vulns>"""
+XML_FOOTER="""<Groups/>
+</Results>
+"""
+
 
 ID_Save_Results = wx.NewId()
 
@@ -109,7 +148,7 @@ class ViewerController:
         list_ = list(set([NessusTreeItem(report, i) for i in items]))
         list_.sort()
         return list_
-        
+
     def create_scan_tree(self, file_, hosts):
         reports = file_.get_all_reports()
         scans_hook = self.view.tree.GetRootItem()
@@ -188,6 +227,42 @@ class ViewerController:
             self.add_output_page(diff_title, diff_output, font="Courier New")
         display.SetValue(output)
 
+    def generate_vulnxml(self, event):
+        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save csv as...").get_choice()
+        if saveas:
+            merged_scans = MergedNessusReport(self.files)
+            if not saveas.endswith(".xml"):
+                saveas = saveas+".xml"
+            sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
+            severity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
+            with open(saveas, "wb") as f:
+                f.write(XML_HEADER.format(timestamp=datetime.now()))
+                f.write(XML_HOSTS_HEADER)
+                for host in merged_scans.hosts:
+                    f.write(XML_HOST_HEADER.format(dnsname=host.dns_name, ipv4=host.address))
+                    for item in host.items:
+                        f.write(XML_HOST_BODY.format(pid=item.pid))
+                    f.write(XML_HOST_FOOTER)
+                f.write(XML_HOSTS_FOOTER)
+                f.write(XML_VULN_HEADER)
+                for item in sorted_tree_items:
+                    issue, diffs = self.get_item_output(item)
+                    cvss_score=item.item.info_dict.get("cvss_base_score")
+                    cvss_vector=item.item.info_dict.get("cvss_vector")
+                    f.write(XML_VULN_BODY.format(
+                        i=item.pid,
+                        title=escape(item.name),
+                        hosts=escape("\n".join(x.address for x in merged_scans.hosts_with_pid(item.pid))),
+                        issue=escape(issue),
+                        diffs=escape(diffs),
+                        severity=severity[item.item.severity],
+                        cvss_score=cvss_score,
+                        cvss_vector=cvss_vector,
+                        )
+                        )
+                f.write(XML_VULN_FOOTER)
+                f.write(XML_FOOTER)
+
     def generate_csv(self, event):
         saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save csv as...").get_choice()
         if saveas:
@@ -195,14 +270,14 @@ class ViewerController:
             if not saveas.endswith(".csv"):
                 saveas = saveas+".csv"
             sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
-            serverity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
+            severity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
             with open(saveas, "wb") as f:
                 csv_writer = csv.writer(f)
                 csv_writer.writerow(["PID","Severity","Hosts","Output","Diffs"])
                 for item in sorted_tree_items:
                     csv_writer.writerow([
                         item.pid,
-                        serverity[item.item.severity],
+                        severity[item.item.severity],
                         "\n".join(x.address for x in merged_scans.hosts_with_pid(item.pid)),
                         self.get_item_output(item)[0],
                         self.get_item_output(item)[1],
@@ -250,6 +325,7 @@ class ViewerController:
         self.view.Bind(wx.EVT_TOOL, self.load_files, id=ID_Load_Files)
         self.view.Bind(wx.EVT_TOOL, self.combine_files, id=ID_Merge_Files)
         self.view.Bind(wx.EVT_TOOL, self.generate_csv, id=ID_Generate_CSV)
+        self.view.Bind(wx.EVT_TOOL, self.generate_vulnxml, id=ID_Generate_VulnXML)
         # Tree clicking and selections
         self.view.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed, self.view.tree)
         self.view.tree.Bind(wx.EVT_TREE_ITEM_MENU, self.on_right_click, self.view.tree)

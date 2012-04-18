@@ -132,7 +132,7 @@ class NessusReport(object):
             self.policy = str(policyName) + "\n\n" + str(policyComments)
         else:
             self.policy = None
-    
+
     def _reportname(self):
         if self.version == "V1":
             name = self._element.find("ReportName")

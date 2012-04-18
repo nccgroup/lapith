@@ -12,6 +12,7 @@ ID_About = wx.NewId()
 ID_Load_Files = wx.NewId()
 ID_Merge_Files = wx.NewId()
 ID_Generate_CSV = wx.NewId()
+ID_Generate_VulnXML = wx.NewId()
 
 class ViewerView(wx.Frame):
     def __init__(self):
@@ -20,7 +21,7 @@ class ViewerView(wx.Frame):
         self.set_icon()
         self._mgr = wx.aui.AuiManager()
         self._mgr.SetManagedWindow(self)
-        
+
         self.add_menubar()
         self.statusbar = self.CreateStatusBar(2, wx.ST_SIZEGRIP)
         self.set_statusbar()
@@ -78,6 +79,7 @@ class ViewerView(wx.Frame):
         bar.AddLabelTool(ID_Load_Files, "Open Files...", bar_bmp1)
         bar.AddLabelTool(ID_Merge_Files, "Merge Files", bar_bmp1)
         bar.AddLabelTool(ID_Generate_CSV, "Generate CSV...", bar_bmp1)
+        bar.AddLabelTool(ID_Generate_VulnXML, "Generate VulnXML...", bar_bmp1)
         bar.Realize()
 
         self._mgr.AddPane(bar, wx.aui.AuiPaneInfo().
