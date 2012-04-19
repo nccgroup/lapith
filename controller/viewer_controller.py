@@ -32,7 +32,9 @@ VULNXML_TEMPLATE=Template("""<?xml version="1.0"?>
 <Hosts>{% for host in hosts %}
     <Host dnsname="{{ host.dns_name|e }}" ipv6="" ipv4="{{ host.address|e }}">
         <Vulns>
-            {% for vuln in host.items %}<Vuln TestPhase="" id="{{ vuln.pid|e }}"></Vuln>
+            {% for vuln in host.items %}<Vuln TestPhase="" id="{{ vuln.pid|e }}">
+                <Data Type="afh:TCP Ports" encoding="">{{ vuln.info_dict.port }}/{{ vuln.info_dict.protocol }}</Data>
+            </Vuln>
         {% endfor %}</Vulns>
     </Host>
 {% endfor %}</Hosts>
@@ -394,12 +396,12 @@ class ViewerController:
         ## Just display a dialog box
         info = wx.AboutDialogInfo()
         info.Name = "Nessus Results - The right way around"
-        info.Version = "1.0.1\n"
-        info.Copyright = "(C) 2010 Felix Ingram\n"
+        info.Version = "1.0.2\n"
+        info.Copyright = "(C) 2012 Felix Ingram\n"
         info.Description = wordwrap(
                 "Sometimes you need Nessus results on a per-issue basis, "
                 "sometimes you need to combine a load of reports into one."
-                "\n\nUncon only edition - keep it in the family people.",
+                "\n\nNGS only edition - keep it in the family people.",
             350, wx.ClientDC(self.view))
         info.Developers = [ "Felix Ingram",]
         ## Then we call wx.AboutBox giving it that info object
