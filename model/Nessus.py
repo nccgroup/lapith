@@ -186,6 +186,7 @@ class NessusHost():
                 self.dns_name = ""
         if not hasattr(self, "address"):
             self.address = element.attrib["name"]
+        if not hasattr(self, "dns_name"):
             self.dns_name = ""
 
     def plugin_output(self, pid):
