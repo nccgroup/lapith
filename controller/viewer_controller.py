@@ -361,10 +361,9 @@ class ViewerController:
             menu.Destroy()
 
     def on_page_close(self, event):
-        idx = event.GetSelection()
-        tab = event.GetEventObject().GetPage(idx)
-        if tab == self.view.display:
-            event.Veto()
+        ## We don't want the user to be able to close any tabs
+        ## TODO Find a way to diable the cross on the GUI
+        event.Veto()
 
     def on_sel_changed(self, event):
         item = event.GetItem()

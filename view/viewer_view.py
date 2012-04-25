@@ -36,11 +36,11 @@ class ViewerView(wx.Frame):
 #        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
 #        self.SetIcon(icon1)
         self.SetTitle("Nessus Viewer")
-                
+
     def add_panes(self):
         self.add_tree_pane()
         self.add_display_pane()
-        
+
     def format_panes(self):
         self._mgr.GetPane("host_tree").Show().Left().Layer(0).Row(0).Position(0)
 
