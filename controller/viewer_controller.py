@@ -59,7 +59,7 @@ VULNXML_TEMPLATE=Template("""<?xml version="1.0"?>
       <Patches/>
       <CVSS>
         <OverallScore>{{ vuln.item.info_dict["cvss_base_score"]|e }}</OverallScore>
-        <Vector>{{ vuln.item.info_dict["cvss_vector"]|e }}</Vector>
+        <Vector>{{ vuln.item.info_dict["cvss_vector"]|replace("CVSS2#", "")|e }}</Vector>
       </CVSS>
       <Severity>{{ vuln.severity|e }}</Severity>
     </Vuln>
@@ -237,7 +237,7 @@ class ViewerController:
         display.SetValue(output)
 
     def generate_vulnxml(self, event):
-        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save csv as...").get_choice()
+        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save VulnXML as...").get_choice()
         if saveas:
             merged_scans = MergedNessusReport(self.files)
             if not saveas.endswith(".xml"):
