@@ -13,6 +13,7 @@ ID_Load_Files = wx.NewId()
 ID_Merge_Files = wx.NewId()
 ID_Generate_CSV = wx.NewId()
 ID_Generate_VulnXML = wx.NewId()
+ID_Generate_RST = wx.NewId()
 
 class ViewerView(wx.Frame):
     def __init__(self):
@@ -78,8 +79,9 @@ class ViewerView(wx.Frame):
         bar_bmp1 = wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, wx.Size(16, 16))
         bar.AddLabelTool(ID_Load_Files, "Open Files...", bar_bmp1)
         bar.AddLabelTool(ID_Merge_Files, "Merge Files", bar_bmp1)
-        bar.AddLabelTool(ID_Generate_CSV, "Generate CSV...", bar_bmp1)
-        bar.AddLabelTool(ID_Generate_VulnXML, "Generate VulnXML...", bar_bmp1)
+        #bar.AddLabelTool(ID_Generate_CSV, "Generate CSV...", bar_bmp1)
+        #bar.AddLabelTool(ID_Generate_VulnXML, "Generate VulnXML...", bar_bmp1)
+        #bar.AddLabelTool(ID_Generate_RST, "Generate RST...", bar_bmp1)
         bar.Realize()
 
         self._mgr.AddPane(bar, wx.aui.AuiPaneInfo().
@@ -93,9 +95,17 @@ class ViewerView(wx.Frame):
         file_menu.Append(wx.ID_OPEN, "&Open Files\tCtrl+O")
         file_menu.AppendSeparator()
         file_menu.Append(wx.ID_EXIT, "E&xit")
+        options_menu = wx.Menu()
+        options_menu.Append(ID_Generate_CSV, "CSV...")
+        options_menu.Append(ID_Generate_VulnXML, "VulnXml...")
+        options_menu.Append(ID_Generate_RST, "ReStructured Text...")
+
+        export_menu = wx.Menu()
+        export_menu.AppendMenu(wx.ID_ANY, "&All issues...", options_menu)
         help_menu = wx.Menu()
         help_menu.Append(ID_About, "About...")
         mb.Append(file_menu, "File")
+        mb.Append(export_menu, "Export")
         mb.Append(help_menu, "Help")
         self.SetMenuBar(mb)
 

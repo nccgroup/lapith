@@ -17,6 +17,7 @@ from view import (
         ID_Merge_Files,
         ID_Generate_CSV,
         ID_Generate_VulnXML,
+        ID_Generate_RST,
         ID_About,
         )
 from  wx.lib.wordwrap import wordwrap
@@ -26,6 +27,51 @@ from xml.sax.saxutils import escape
 from datetime import datetime
 
 from jinja2 import Template
+
+SEVERITY = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
+
+RST_TEMPLATE=Template("""\
+        {%- for vuln in vulns %}{% if not vuln.name.startswith("PORT:") %}{{ vuln.name }}
+{% for a in vuln.name %}={% endfor %}
+
+.. affectedhosts::{% for host in merged_scans.hosts_with_pid(vuln.pid) %}
+    {{ host.address }}
+    {%- endfor %}
+
+:cvss:`{{ vuln.item.info_dict["cvss_base_score"] }}`
+:cvss:`{{ vuln.item.info_dict["cvss_vector"] }}`
+
+Description
+-----------
+{{ vuln.issue|replace("Plugin Output:", "Plugin Output::\n")|replace("--------------------", "\n\n") }}
+{% endif %}
+
+Recommendation
+--------------
+
+References
+----------
+{% if vuln.item.info_dict["cve"] %}
+CVE:
+{% for cve in vuln.item.info_dict["cve"] %}
+{{ cve }}: `http://web.nvd.nist.gov/view/vuln/detail?vulnId={{ cve }}`
+{%- endfor %}
+{%- endif %}
+{% if vuln.item.info_dict["bid"] %}
+BID:
+{% for bid in vuln.item.info_dict["bid"] %}
+{{ bid }}: `http://www.securityfocus.com/bid/{{ bid }}`
+{%- endfor %}
+{%- endif %}
+{% if vuln.item.info_dict["xref"] %}
+Other References:
+{% for xref in vuln.item.info_dict["xref"] %}
+{{ xref }}
+{%- endfor %}
+{%- endif %}
+
+{% endfor %}
+""")
 
 VULNXML_TEMPLATE=Template("""<?xml version="1.0"?>
 <Results Date="{{ timestamp|e }}" Tool="NessusViewer">
@@ -236,6 +282,27 @@ class ViewerController:
             self.add_output_page(diff_title, diff_output, font="Courier New")
         display.SetValue(output)
 
+    def generate_rst(self, event):
+        saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save RST as...").get_choice()
+        if saveas:
+            merged_scans = MergedNessusReport(self.files)
+            if not saveas.endswith(".rst"):
+                saveas = saveas+".rst"
+            sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
+            with open(saveas, "wb") as f:
+                for item in sorted_tree_items:
+                    issue, diffs = self.get_item_output(item)
+                    item.issue = issue
+                    item.diffs = diffs
+                    item.severity = SEVERITY[item.item.severity]
+                f.write(RST_TEMPLATE.render(
+                    timestamp=datetime.now(),
+                    hosts=merged_scans.hosts,
+                    vulns=sorted_tree_items,
+                    merged_scans=merged_scans,
+                    )
+                    )
+
     def generate_vulnxml(self, event):
         saveas = SaveDialog(self.view, defaultDir=self._save_path, message="Save VulnXML as...").get_choice()
         if saveas:
@@ -243,13 +310,12 @@ class ViewerController:
             if not saveas.endswith(".xml"):
                 saveas = saveas+".xml"
             sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
-            severity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
             with open(saveas, "wb") as f:
                 for item in sorted_tree_items:
                     issue, diffs = self.get_item_output(item)
                     item.issue = issue
                     item.diffs = diffs
-                    item.severity = severity[item.item.severity]
+                    item.severity = SEVERITY[item.item.severity]
                 f.write(VULNXML_TEMPLATE.render(
                     timestamp=datetime.now(),
                     hosts=merged_scans.hosts,
@@ -265,14 +331,13 @@ class ViewerController:
             if not saveas.endswith(".csv"):
                 saveas = saveas+".csv"
             sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
-            severity = {0:"Other", 1:"Low", 2:"Med", 3:"High"}
             with open(saveas, "wb") as f:
                 csv_writer = csv.writer(f)
                 csv_writer.writerow(["PID","Severity","Hosts","Output","Diffs"])
                 for item in sorted_tree_items:
                     csv_writer.writerow([
                         item.pid,
-                        severity[item.item.severity],
+                        SEVERITY[item.item.severity],
                         "\n".join(x.address for x in merged_scans.hosts_with_pid(item.pid)),
                         self.get_item_output(item)[0],
                         self.get_item_output(item)[1],
@@ -321,6 +386,7 @@ class ViewerController:
         self.view.Bind(wx.EVT_TOOL, self.combine_files, id=ID_Merge_Files)
         self.view.Bind(wx.EVT_TOOL, self.generate_csv, id=ID_Generate_CSV)
         self.view.Bind(wx.EVT_TOOL, self.generate_vulnxml, id=ID_Generate_VulnXML)
+        self.view.Bind(wx.EVT_TOOL, self.generate_rst, id=ID_Generate_RST)
         # Tree clicking and selections
         self.view.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_sel_changed, self.view.tree)
         self.view.tree.Bind(wx.EVT_TREE_ITEM_MENU, self.on_right_click, self.view.tree)

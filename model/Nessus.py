@@ -269,7 +269,7 @@ class NessusItem():
                     if list_:
                         info_dict[identifier] = []
                         for item in list_:
-                            info_dict[identifier].append(identifier.upper())
+                            info_dict[identifier].append(item.text)
                             self.output += identifier.upper()+": "
                             self.output += item.text+"\n"
             except AttributeError:
