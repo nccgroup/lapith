@@ -69,6 +69,12 @@ Other References:
 {{ xref }}
 {%- endfor %}
 {%- endif %}
+{% if vuln.item.info_dict["see_also"] %}
+See also:
+{% for xref in vuln.item.info_dict["see_also"] %}
+{{ xref }}
+{%- endfor %}
+{%- endif %}
 
 {% endfor %}
 """)

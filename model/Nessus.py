@@ -258,13 +258,15 @@ class NessusItem():
                     self.output += "%s: %s\n" % (attrib, element.attrib.get(attrib))
                     info_dict[attrib] = element.attrib.get(attrib)
                 self.output += "\n"
-                for element_name in ("description", "plugin_output", "cvss_vector", "cvss_base_score"):
+                for element_name in ("description", "plugin_output",
+                        "cvss_vector", "cvss_base_score"):
                     output_element = element.find(element_name)
                     if output_element is not None:
                         info_dict[element_name] = output_element.text
                         self.output += element_name.replace("_", " ").title()+":\n"
                         self.output += output_element.text+"\n\n"
-                for identifier in ("cve", "bid", "xref"):
+                for identifier in ("cve", "bid", "xref", "see_also",
+                        "exploit_available", "stig_severity"):
                     list_ = element.findall(identifier)
                     if list_:
                         info_dict[identifier] = []
