@@ -13,6 +13,7 @@ ID_Load_Files = wx.NewId()
 ID_Merge_Files = wx.NewId()
 ID_Generate_CSV = wx.NewId()
 ID_Generate_VulnXML = wx.NewId()
+ID_Search = wx.NewId()
 ID_Generate_RST = wx.NewId()
 
 class ViewerView(wx.Frame):
@@ -46,11 +47,26 @@ class ViewerView(wx.Frame):
         self._mgr.GetPane("host_tree").Show().Left().Layer(0).Row(0).Position(0)
 
     def add_tree_pane(self):
-        tree = wx.TreeCtrl(self, -1, wx.Point(0, 0), wx.Size(200, 250),
+        panel = wx.Panel(self, -1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        tree = wx.TreeCtrl(panel, -1, wx.Point(0, 0), wx.Size(200, 250),
                            wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
-        self._mgr.AddPane(tree, wx.aui.AuiPaneInfo().
+        label = wx.StaticText(panel, -1, "Filter results")
+        self.search = wx.SearchCtrl(panel,  style=wx.TE_PROCESS_ENTER)
+        sizer.Add(tree, 1, wx.EXPAND, 0)
+        sizer.Add((15,5))
+        sizer.Add(label, 0, wx.ALL, 2)
+        sizer.Add(self.search, 0, wx.EXPAND, 5)
+        panel.SetSizer(sizer)
+        self._mgr.AddPane(panel, wx.aui.AuiPaneInfo().
                           Name("host_tree").Caption("Hosts").
-                          Left().Layer(1).Position(1).CloseButton(False).MaximizeButton(True))
+                          Left().
+                          Layer(1).
+                          Position(1).
+                          CloseButton(False).
+                          MaximizeButton(True).
+                          BestSize((200,250))
+                          )
         self.tree = tree
 
     def CreateTextCtrl(self, font="Courier New"):

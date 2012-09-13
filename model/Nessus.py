@@ -8,6 +8,8 @@
 from xml.etree import ElementTree as ET
 import os
 
+SEVERITY = {0:"Other", 1:"Low", 2:"Med", 3:"High", 4:"Critical"}
+
 NESSUS_VERSIONS = {
         "NessusClientData": "V1",
         "NessusClientData_v2": "V2",
@@ -22,12 +24,14 @@ class MergedNessusReport(object):
             for report in file_._tree.findall("Report"):
                 all_reports.append(NessusReport(report, file_.version))
 
+        self.criticals = []
         self.highs = []
         self.meds = []
         self.lows = []
         self.others = []
 
         for report in all_reports:
+            self.criticals.extend(report.criticals)
             self.highs.extend(report.highs)
             self.meds.extend(report.meds)
             self.lows.extend(report.lows)
@@ -96,6 +100,9 @@ class NessusReport(object):
         self.items = []
         for host in self.hosts:
             self.items.extend(NessusItem(i, self.version, host=host) for i in host._element.findall("ReportItem"))
+
+        self.criticals = [i for i in self.items if i.severity == 3]
+        self.criticals.sort(lambda x, y: x.pid-y.pid)
 
         self.highs = [i for i in self.items if i.severity == 3]
         self.highs.sort(lambda x, y: x.pid-y.pid)
@@ -277,7 +284,9 @@ class NessusItem():
             except AttributeError:
                 self.output = ""
             self.severity = int(element.attrib["severity"])
+            self.severity_text = SEVERITY[self.severity]
             info_dict["severity"] = element.attrib["severity"]
+            info_dict["severity_text"] = SEVERITY[self.severity]
             self.info_dict = info_dict
 
     def __repr__(self):

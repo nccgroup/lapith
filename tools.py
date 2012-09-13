@@ -89,6 +89,7 @@ def find_high_med(tree):
 class NessusTools(CommandLineApp):
     plugin_slice = BoolOpt("-p", "--plugin-slice", dest="slice", help="Slice the file by plugins")
     make_otl = BoolOpt("--outline", dest="otl", help="Output in OTL format")
+    criticals = BoolOpt("--criticals", dest="criticals", help="Output criticals issues")
     highs = BoolOpt("--highs", dest="highs", help="Output high issues")
     meds = BoolOpt("--meds", dest="meds", help="Output medium issues")
     lows = BoolOpt("--lows", dest="lows", help="Output low issues")
@@ -134,14 +135,17 @@ class NessusTools(CommandLineApp):
 
     def check_plugin_level(self, item):
         sev = item.severity
-        if self.options.highs and sev == 3:
+        if self.options.criticals and sev == 4:
+            self.debug("Item was critical")
+            return True
+        elif self.options.highs and sev == 3:
             self.debug("Item was high")
             return True
         elif self.options.meds and sev == 2:
             return True
         elif self.options.lows and sev == 1:
             return True
-        elif self.options.highs or self.options.meds or self.options.lows:
+        elif self.options.criticals or self.options.highs or self.options.meds or self.options.lows:
             self.debug("An option was set but the plugin didn't match so we're false")
             return False
         self.debug("No options set we're true")
