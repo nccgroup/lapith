@@ -47,9 +47,9 @@ RST_TEMPLATE=Template("""\
         {%- for vuln in vulns %}{% if not vuln.name.startswith("PORT:") %}{{ vuln.name }}
 {% for a in vuln.name %}={% endfor %}
 
-.. affectedhosts::{% for host in merged_scans.hosts_with_pid(vuln.pid) %}
-    {{ host.address }}
-    {%- endfor %}
+.. affectedhosts::{% for host in merged_scans.hosts_with_pid(vuln.pid) %}{% for item in host.items_for_pid(vuln.pid) %}
+    {{ host.address }}, {{ item.info_dict.port }}/{{ item.info_dict.protocol }}
+    {%- endfor %}{%- endfor %}
 
 :severity:`{{ vuln.item.info_dict["severity_text"] }}`
 :cvss:`{{ vuln.item.info_dict["cvss_base_score"] }}`
@@ -57,7 +57,7 @@ RST_TEMPLATE=Template("""\
 
 Description
 -----------
-{{ vuln.issue|replace("Plugin Output:", "Plugin Output::\n")|replace("--------------------", "\n\n") }}
+{{ "\n".join(vuln.issue.initial_output.splitlines()[7:])|replace("Plugin Output:", "Plugin Output::\n") }}
 {% endif %}
 
 Recommendation
@@ -109,12 +109,8 @@ VULNXML_TEMPLATE=Template("""<?xml version="1.0"?>
     <Vuln group="" id="{{ vuln.pid|e }}">
       <Title>{{ vuln.name|e }}</Title>
       <Description encoding="">
-      Hosts with issue
-      {% for host in merged_scans.hosts_with_pid(vuln.pid) %}
-      {{ host.address|e }}
-      {% endfor %}
 
-      {{ vuln.issue|e }}
+      {{ "\n".join(vuln.issue.initial_output.splitlines()[7:])|replace("Plugin Output:", "Plugin Output::\n") | e}}
 
       ------------------------
       {{ vuln.diffs|e }}
