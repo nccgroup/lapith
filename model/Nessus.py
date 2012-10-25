@@ -196,6 +196,13 @@ class NessusHost():
         if not hasattr(self, "dns_name"):
             self.dns_name = ""
 
+    def item_for_pid(self, pid):
+        items = [i for i in self.items if i.pid == pid]
+        return items[0]
+
+    def items_for_pid(self, pid):
+        return [i for i in self.items if i.pid == pid]
+
     def plugin_output(self, pid):
         items = [i for i in self.items if i.pid == pid]
         if items:
