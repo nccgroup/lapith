@@ -30,6 +30,19 @@ from jinja2 import Template
 
 SEVERITY = {0:"Other", 1:"Low", 2:"Med", 3:"High", 4:"Critical"}
 
+OUTPUT_TEMPLATE=Template("""\
+{{item.name}}
+{{hosts_count}} hosts with this issue
+{% for host in hosts %}
+{{host}}{% endfor %}
+
+---------------------------------------------
+{% for host in identical_hosts %}
+{{host}}{% endfor %}
+
+{{ initial_output }}
+""")
+
 RST_TEMPLATE=Template("""\
         {%- for vuln in vulns %}{% if not vuln.name.startswith("PORT:") %}{{ vuln.name }}
 {% for a in vuln.name %}={% endfor %}
@@ -301,12 +314,20 @@ class ViewerController:
                 diff_output += "=" * 70 + "\n\n%s\n%s\n\n" % (host, diff)
             else:
                 identical_hosts.append(host)
-        output = item.name+"\n"
-        output += "%s hosts with this issue\n" % len(hosts)
-        output += "\n".join(str(i).split()[0] for i in hosts)
-        output += "\n"+"-"*20+"\n"
-        output += "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
-        return output, diff_output
+        output = OUTPUT_TEMPLATE.render(
+            item=item,
+            hosts_count=len(hosts),
+            hosts=hosts,
+            identical_hosts=identical_hosts,
+            initial_output=initial_output
+        )
+        return output, diff_output, dict(item=item, hosts=hosts, identical_hosts=identical_hosts, initial_output=initial_output)
+    #    output = item.name+"\n"
+    #    output += "%s hosts with this issue\n" % len(hosts)
+    #    output += "\n".join(str(i).split()[0] for i in hosts)
+    #    output += "\n"+"-"*20+"\n"
+    #    output += "\n".join(str(i) for i in identical_hosts) + "\n\n" + initial_output
+    #    return output, diff_output
 
     def show_nessus_item(self, item):
         output, diff_output = self.get_item_output(item)
