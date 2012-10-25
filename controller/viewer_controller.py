@@ -326,7 +326,7 @@ class ViewerController:
     #    return output, diff_output
 
     def show_nessus_item(self, item):
-        output, diff_output = self.get_item_output(item)
+        output, diff_output, _ = self.get_item_output(item)
 
         diff_title = "Diffs"
         self.delete_page_with_title(diff_title)
@@ -345,8 +345,8 @@ class ViewerController:
             sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.criticals+merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
             with open(saveas, "wb") as f:
                 for item in sorted_tree_items:
-                    issue, diffs = self.get_item_output(item)
-                    item.issue = issue
+                    issue, diffs, meta = self.get_item_output(item)
+                    item.issue = meta
                     item.diffs = diffs
                     item.severity = SEVERITY[item.item.severity]
                 f.write(RST_TEMPLATE.render(
@@ -366,8 +366,8 @@ class ViewerController:
             sorted_tree_items = self.sorted_tree_items(merged_scans, merged_scans.criticals+merged_scans.highs+merged_scans.meds+merged_scans.lows+merged_scans.others)
             with open(saveas, "wb") as f:
                 for item in sorted_tree_items:
-                    issue, diffs = self.get_item_output(item)
-                    item.issue = issue
+                    issue, diffs, meta = self.get_item_output(item)
+                    item.issue = meta
                     item.diffs = diffs
                     item.severity = SEVERITY[item.item.severity]
                 f.write(VULNXML_TEMPLATE.render(
@@ -468,7 +468,7 @@ class ViewerController:
                 output = ""
                 if isinstance(data, list):
                     for item in data:
-                        output, diff_output = self.get_item_output(item)
+                        output, diff_output, _ = self.get_item_output(item)
                         f.write("="*20+"\n")
                         f.write(output)
                         f.write(diff_output)
