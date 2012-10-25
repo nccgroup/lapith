@@ -101,7 +101,7 @@ class NessusReport(object):
         for host in self.hosts:
             self.items.extend(NessusItem(i, self.version, host=host) for i in host._element.findall("ReportItem"))
 
-        self.criticals = [i for i in self.items if i.severity == 3]
+        self.criticals = [i for i in self.items if i.severity == 4]
         self.criticals.sort(lambda x, y: x.pid-y.pid)
 
         self.highs = [i for i in self.items if i.severity == 3]

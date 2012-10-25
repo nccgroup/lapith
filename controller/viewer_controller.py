@@ -423,6 +423,9 @@ class ViewerController:
             other_hook = self.view.tree.AppendItem(items_hook, "Others", 0)
             self.view.tree.SetPyData(other_hook, self.sorted_tree_items(merged_scans, merged_scans.others))
 
+            for crit in self.sorted_tree_items(merged_scans, merged_scans.criticals):
+                item = self.view.tree.AppendItem(critical_hook, str(crit), 0)
+                self.view.tree.SetPyData(item, crit)
             for high in self.sorted_tree_items(merged_scans, merged_scans.highs):
                 item = self.view.tree.AppendItem(high_hook, str(high), 0)
                 self.view.tree.SetPyData(item, high)
