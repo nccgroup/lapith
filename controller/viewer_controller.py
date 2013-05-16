@@ -163,7 +163,7 @@ class ViewerController:
         self.bind_events()
         self.view.Layout()
         self.view.Show()
-        self.view.search.SetFocus()
+        #self.view.search.SetFocus()
 
     def drop_action(self, file_):
         self.files.append(NessusFile(file_))
@@ -458,8 +458,8 @@ class ViewerController:
         self.view.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.view.Bind(wx.EVT_MENU, self.on_about, id=ID_About)
         ## Search
-        self.view.search.Bind(wx.EVT_TEXT_ENTER, self.on_do_search)
-        self.view.search.Bind(wx.EVT_TEXT, self.on_do_search)
+        #self.view.search.Bind(wx.EVT_TEXT_ENTER, self.on_do_search)
+        #self.view.search.Bind(wx.EVT_TEXT, self.on_do_search)
 
     def extract_results(self, event):
         item = self.view.tree.GetSelection()

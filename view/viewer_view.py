@@ -51,12 +51,12 @@ class ViewerView(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         tree = wx.TreeCtrl(panel, -1, wx.Point(0, 0), wx.Size(200, 250),
                            wx.TR_DEFAULT_STYLE | wx.NO_BORDER)
-        label = wx.StaticText(panel, -1, "Filter results")
-        self.search = wx.SearchCtrl(panel,  style=wx.TE_PROCESS_ENTER)
+        #label = wx.StaticText(panel, -1, "Filter results")
+        #self.search = wx.SearchCtrl(panel,  style=wx.TE_PROCESS_ENTER)
         sizer.Add(tree, 1, wx.EXPAND, 0)
         sizer.Add((15,5))
-        sizer.Add(label, 0, wx.ALL, 2)
-        sizer.Add(self.search, 0, wx.EXPAND, 5)
+        #sizer.Add(label, 0, wx.ALL, 2)
+        #sizer.Add(self.search, 0, wx.EXPAND, 5)
         panel.SetSizer(sizer)
         self._mgr.AddPane(panel, wx.aui.AuiPaneInfo().
                           Name("host_tree").Caption("Hosts").
