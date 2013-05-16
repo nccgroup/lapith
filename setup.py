@@ -1,7 +1,7 @@
 # Nessus results viewing tools
 #
 # Developed by Felix Ingram, f.ingram@gmail.com, @lllamaboy
-# http://www.github.com/nccgroup/nessusviewer
+# http://www.github.com/nccgroup/lapith
 #
 # Released under AGPL. See LICENSE for more information
 
@@ -64,7 +64,7 @@ py2exe_options = dict(
                        ],
                    )
 setup(
-        name="NessusViewer",
+        name="Lapith",
 #        cmdclass= {'py2exe': Py2exe},
         version=version,
         test_suite="nose.collector",

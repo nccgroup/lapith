@@ -1,7 +1,7 @@
 # Nessus results viewing tools
 #
 # Developed by Felix Ingram, f.ingram@gmail.com, @lllamaboy
-# http://www.github.com/nccgroup/nessusviewer
+# http://www.github.com/nccgroup/lapith
 #
 # Released under AGPL. See LICENSE for more information
 
@@ -94,7 +94,7 @@ See also:
 """)
 
 VULNXML_TEMPLATE=Template("""<?xml version="1.0"?>
-<Results Date="{{ timestamp|e }}" Tool="NessusViewer">
+<Results Date="{{ timestamp|e }}" Tool="Lapith">
 <Hosts>{% for host in hosts %}
     <Host dnsname="{{ host.dns_name|e }}" ipv6="" ipv4="{{ host.address|e }}">
         <Vulns>

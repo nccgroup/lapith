@@ -1,7 +1,7 @@
 # Nessus results viewing tools
 #
 # Developed by Felix Ingram, f.ingram@gmail.com, @lllamaboy
-# http://www.github.com/nccgroup/nessusviewer
+# http://www.github.com/nccgroup/lapith
 #
 # Released under AGPL. See LICENSE for more information
 
@@ -128,7 +128,7 @@ class ViewerView(wx.Frame):
     def set_statusbar(self):
         self.statusbar.SetStatusWidths([-2, -3])
         self.statusbar.SetStatusText("Ready to view those nessus files!", 0)
-        self.statusbar.SetStatusText("Welcome To NessusViewer!", 1)
+        self.statusbar.SetStatusText("Welcome To Lapith.", 1)
 
     def set_size(self):
         self.SetSize((800, 500))
