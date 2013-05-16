@@ -6,7 +6,16 @@
 # Released under AGPL. See LICENSE for more information
 
 if __name__ == '__main__':
-    import wx
+    import sys
+    try:
+        import wx
+    except ImportError:
+        print("""\
+You need to install WXPython to use the viewer
+
+http://wxpython.org/download.php
+""")
+        sys.exit()
     from controller import ViewerController
     app = wx.App(0)
     ViewerController()
