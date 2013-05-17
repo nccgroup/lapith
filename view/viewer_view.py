@@ -37,7 +37,7 @@ class ViewerView(wx.Frame):
 #        iconFile = "search.ico"
 #        icon1 = wx.Icon(iconFile, wx.BITMAP_TYPE_ICO)
 #        self.SetIcon(icon1)
-        self.SetTitle("Nessus Viewer")
+        self.SetTitle("Lapith")
 
     def add_panes(self):
         self.add_tree_pane()
