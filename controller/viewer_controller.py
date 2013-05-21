@@ -529,8 +529,7 @@ class ViewerController:
         info.Copyright = "(C) 2012 Felix Ingram\n"
         info.Description = wordwrap(
                 "Sometimes you need Nessus results on a per-issue basis, "
-                "sometimes you need to combine a load of reports into one."
-                "\n\nNGS only edition - keep it in the family people.",
+                "sometimes you need to combine a load of reports into one.",
             350, wx.ClientDC(self.view))
         info.Developers = [ "Felix Ingram",]
         ## Then we call wx.AboutBox giving it that info object
