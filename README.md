@@ -8,6 +8,8 @@ Results files can be dragged and dropped onto the left-hand tree pane in order t
 
 Various export options are supported: CSV, XML, and restructured text. If the results of a plug-in differ between hosts then a separate tab will appear showing the diff output. Note that host names and IP addresses are excluded from the plug-in output when computing the diffs.
 
+![Metasploitable merged scan](http://stupentest.net/images/nessusviewer_Metasploitable_scan_merged.PNG "Metasploitable has some issues")
+
 # Requirements
 
 Lapith requires Python 2.7 and the WXPython GUI library. The Jinja2 templating language is also required for the various export options.
