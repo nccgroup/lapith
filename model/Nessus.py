@@ -5,7 +5,10 @@
 #
 # Released under AGPL. See LICENSE for more information
 
-from xml.etree import ElementTree as ET
+try:
+    from xml.etree import cElementTree as ET
+except ImportError:
+    from xml.etree import ElementTree as ET
 import os
 
 SEVERITY = {0:"Other", 1:"Low", 2:"Med", 3:"High", 4:"Critical"}
